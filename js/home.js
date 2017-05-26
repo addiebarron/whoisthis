@@ -60,10 +60,10 @@ $(document).ready(function() {
 $(window).on('load resize', function() {
     if ($(window).width() >= $(window).height()*0.9) {
         $('#screensizeoverlay').show();
-        $('body').children().not('#screensizeoverlay').css({'filter':'blur(5px)'});
+        $('body').css({'filter':'blur(5px)'});
     } else {
         $('#screensizeoverlay').hide();
-        $('body').children().not('#screensizeoverlay').css({'filter':'blur(0px)'});
+        $('body').css({'filter':'none'});
     }
 });
 
