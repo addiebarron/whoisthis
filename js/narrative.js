@@ -1,14 +1,17 @@
 //NARRATIVE 
 openingQs = ['How old are you?','Who is the current president?']
-skipIntro = false;
+
 
 $(document).ready(function(){
+	skipIntro = true;
+
 	receiveMsg('Linnea', 'linnea_0_0');
-	if (!skipIntro) {
-		$('#mailoverlaydiv').fadeIn(3000, function(){
-			openingQs = ['How old are you?','Who is the current president?']
+
+	if (skipIntro==false) {
+		$('#mailoverlay div').fadeIn(3000, function(){
+			var openingQs = ['How old are you?','Who is the current president?']
 			$('#mailoverlaybtn').click( function(){
-				if (($('#mailoverlayinput').val() != '')&&(openingQs.length > 0)) 
+				if (($('#mailoverlayinput').val()!='')&&(openingQs.length>0)) 
 				{
 					var newMsg = openingQs.shift();
 					$('#mailoverlaydiv').fadeOut(1000, function(){

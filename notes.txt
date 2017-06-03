@@ -1,0 +1,21 @@
+Startup
+
+cd /Users/addiebarron/Desktop/WEB/whoisthis
+sass --watch scss/index.scss:css/index.css
+python -m SimpleHTTPServer
+open -a "Google Chrome" "http://localhost:8000"
+open -a "Sublime Text" index.html scss/index.scss js/home.js
+
+To-Do
+
+* Trigger specific events on app transitions.
+	- appOpened (at the end of opening animation)
+	- appClosed (at the end of closing animation)
+	- screenTo (forward)
+	- screenBack (backward)
+	- screenChange (triggered both forward and backward)
+* Fix issue - if you call ScreenChange with an ID for a page in another app, you will be taken to an empty screen. E.g open mail, call ScreenTo('#messages').
+- Style bottom and top bars
+• Style all apps
+- Notifications -- top bar?
+- 
