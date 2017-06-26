@@ -14,7 +14,7 @@ msgsData = (function () {
 })();
 
 contactsArray = ['Mom','Hawthorne','Linnea'];
-//contactsArray=contactsArray.sort(); //alphabetize
+//contactsArray=contactsArray.sort(); // alphabetize
 
 allMsgs = {};
 lastMsgs = {};
@@ -28,32 +28,20 @@ for(var i=0; i < contactsArray.length; i++) {
 	counterArray[contactsArray[i]] = 0;
 }
 
-// RUNS WHEN THE DOM LOADS
 $(document).ready(function() {
-
-	$('#msging').on('pageshow', function(){
-		$('#msg_list').listview('refresh');
-		scrollToBottom();
-	});
-
-	$('#msging').on('pagebeforeshow', function(){
-		$('#msg_list').listview('refresh');
-		scrollToBottom();
-		$('#msg_input').val('');
-	});
 
     $('#contacts_header h2').text('Contacts ('+contactsArray.length.toString()+')') // set up header with number of contacts
     
     for (var i=0; i<contactsArray.length; i++) // loop through contacts and create the contacts screen
     {
-    	$('<li><a href="#msging" id="contact-'+contactsArray[i]+'" data-transition="slide"><h1 style="display:inline">'+contactsArray[i]+'</h1><pre class="lastmsg">'+lastMsgs[contactsArray[i]]+'</pre></a></li>')
+    	$('<li><div id="contact-'+contactsArray[i]+'"><h1 style="display:inline">'+contactsArray[i]+'</h1><pre class="lastmsg">'+lastMsgs[contactsArray[i]]+'</pre></div></li>')
     			.appendTo('#contacts_list')
-    			.click(setupMessageScreen(contactsArray[i]));
+    			.click(SetupMessageScreen(contactsArray[i]));
     }
     
     $('#sendbtn').click( function(){
     	if ($('#msg_input').val() != '') {
-			sendMsg($('#msg_header h2').text(), $('#msg_input').val(), '10:00AM', false);
+			SendMsg($('#msg_header h2').text(), $('#msg_input').val(), '10:00AM', false);
 			$('#msg_response_options').html('');
 			$('#msg_list').listview('refresh');
 		}
@@ -61,9 +49,9 @@ $(document).ready(function() {
 });
 
 
-function receiveMsg(sender, msgID, timeout) {
+function ReceiveMsg(sender, msgID, timeout) {
 
-	if (typeof(timeout)==='undefined') timeout = 3000;
+	if (typeof(timeout)==='undefined') {timeout = 3000}
 
 	// initialization / variables
 
@@ -73,11 +61,11 @@ function receiveMsg(sender, msgID, timeout) {
 	var msgResponses = msg.responses;
 
 	setTimeout(function(){
-		printMsg(sender, msgArray, msgResponses);
+		PrintMsg(sender, msgArray, msgResponses);
 	},timeout);
 }
 
-function printMsg(sender, msgArray, msgResponses) {
+function PrintMsg(sender, msgArray, msgResponses) {
 
 	var thisPageID = $.mobile.pageContainer.pagecontainer('getActivePage').attr('id');
 
@@ -111,7 +99,7 @@ function printMsg(sender, msgArray, msgResponses) {
 	// make sure everything is styled and displayed correctly
 
 	if (thisPageID == 'msging') { 
-		setupMessageScreen(sender)();
+		SetupMessageScreen(sender)();
 		$('#msg_list').listview('refresh');
 		scrollToBottom();
 	} // if we are already on the messaging screen, set up the messaging screen immediately.  otherwise, wait until the relevant contact is clicked
@@ -120,7 +108,7 @@ function printMsg(sender, msgArray, msgResponses) {
 		//run gif until timeout is over
 		var timeout = msgArray[0].length*75;
 		setTimeout(function(){
-			printMsg(sender, msgArray, msgResponses);
+			PrintMsg(sender, msgArray, msgResponses);
 		},timeout);
 	}
 	else {
@@ -132,18 +120,18 @@ function printMsg(sender, msgArray, msgResponses) {
 				var noti = msgActiveResponses[sender][response];
 				if (noti.type == 'email') {
 					getNotification('Mail', 'New email from '+noti.sender, true);
-					receiveMail(noti.id);
+					ReceiveMail(noti.id);
 				}
 				else if (noti.type == 'message') {
 					getNotification('Messaging', 'New message from '+noti.sender, true);
-					receiveMsg(noti.sender, noti.id);
+					ReceiveMsg(noti.sender, noti.id);
 				}
 			}, 20000);
 		} 
 	}
 }
 
-function sendMsg(contact, messageText)
+function SendMsg(contact, messageText)
 {
 	var msgID = msgActiveResponses[contact][messageText];
 	//Fires when you click the Send button (or press Enter).  Prints what you typed onto the screen.  If the message is "hi", starts countdown to a response.  Then empties the input box and updates the array of messages. 
@@ -163,38 +151,41 @@ function sendMsg(contact, messageText)
 
 	scrollToBottom();
 
-	receiveMsg(contact, msgID);
+	ReceiveMsg(contact, msgID);
 }
 
-function setupMessageScreen(contact){
+function SetupMessageScreen(contact){
 	return function(){
-		$('#msg_header h2').text(contact);
+		$('#messages .header h2').text(contact);
 		$('#msg_list').html(allMsgs[contact]);
-		$('#msg_response_navbar').remove();
-		$('<div id="msg_response_navbar" data-role="navbar"><ul id="msg_response_options"></ul></div>').prependTo('#msg_footer');
 
-		if ((Object.keys(msgActiveResponses[contact]).length == 0)||(Object.keys(msgActiveResponses[contact])[0] == 'notification')) {
-			$('#msg_response_options').html('<li><a><span style="color:gray">Error: No responses could be generated</span></a></li>');
+		var responses = Object.keys(msgActiveResponses[contact]);
+
+		if (responses.length==0 || responses[0]=='notification') {
+			var $responseTable = $('#messages .footer .responses .table-row');
+			$responseTable.empty();
+			$('<div>', {'class': 'table-cell cell-1'})
+				.text('Error: no responses could be generated')
+				.appendTo($responseTable);
 		} else {
-			for (var i = 0; i < Object.keys(msgActiveResponses[contact]).length; i++) {
-
-				var response = Object.keys(msgActiveResponses[contact])[i];
-
-				$('<li><a><span>'+response+'</span></a></li>')
-					.appendTo('#msg_response_options')
-					.click(onMsgResponseClick(contact,response));
+			for (var i = 0; i < responses.length; i++) {
+				var $responseTable = $('#messages .footer .responses .table-row');
+				$responseTable.empty();
+				var response = responses[i];
+				$('<div>', {'class': 'floating table-cell cell-'+parseInt(i)})
+					.text(response)
+					.appendTo($responseTable)
+					.click(OnMsgResponseClick(contact,response));
 			}
 		}
 
-		$('#msg_footer').trigger('create');
-
-		scrollToBottom();
+		ScreenTo('#messages');
 	}
 }
 
-function onMsgResponseClick(contact, response){
+function OnMsgResponseClick(contact, response){
 	return function(){
-		sendMsg(contact, response);
+		SendMsg(contact, response);
 		$('#msg_response_options').html('');
 		$('#msg_list').listview('refresh');
 	}

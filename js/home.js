@@ -7,12 +7,14 @@ appNameToID =
         'Records' : '#records'
     };
 
-appIDToLocation =
-    {
-        '#texting':[110, 123],
-        '#mail': [220, 309],
-        '#records': [110, 247]
-    }
+if (location.search.split('app=')[1]) {
+    initialApp = '#'+location.search.split('=')[1];
+}
+else {
+    console.log(location.search.split('=')[1]);
+    console.log('no app open');
+    initialApp = '#does-not-exist';
+}
 
 ENDGAME = false;
 
@@ -21,13 +23,14 @@ allNotifications =
 notiCounter = 0;
 notificationsPossible = false;
 
-
 openingFadeTime = 1000;
 
 screenChangeTime = 200;
-appChangeTime = 300
+appChangeTime = 300;
 
 $(document).ready(function() {
+
+    Initialize();
 
     $('.home-app').click(function(){
         var appID = $(this).data('navigate');
@@ -42,7 +45,7 @@ $(document).ready(function() {
         ScreenBack();
     });
     $('.draw-test').click(function(){
-        Get1Noti('#texting');
+        Get1Noti('texting');
     });
 });
 
@@ -58,16 +61,17 @@ $(document).on('appclosed', function(){
         });
     }
 });
+/*
+window.onbeforeunload = function(){
+    return "The game will be lost if you leave the page, are you sure?";
+};
+*/ // UNCOMMENT THIS FOR THE FINAL VERSION. avoids accidental reloads
 
 $(window).keydown(function(e) {
 	// If escape is pressed, trigger the back button
 	if (e.which == 27) { 
 		ScreenBack();
 	}
-});
-
-$(window).on('load resize', function() {
-    DynamicResize();
 });
 
 function GetNotification(app, notiText, avoidable) {
@@ -165,24 +169,26 @@ function GetNotification(app, notiText, avoidable) {
 }
 
 function OpenApp(id) {
-    var $app = $(id);
-    
-    $app
-    .addClass('trans-app')
-    .css( 'top', $(window).height() )
-    .animate({
-        top : 0,
-        opacity : 1
-    }, appChangeTime, function(){
-        // callback, triggered at the end of the animation
-        $(this)
-        .addClass('open-app')
-        .removeClass('trans-app')
-	        .children('.current-screen')
-	        .removeClass('trans-screen');
-    })
-    .children('.current-screen')
-    .addClass('trans-screen');
+    if ($(id).exists() && $(id).hasClass('app')) {
+        $(id)
+        .addClass('trans-app')
+        .css( 'top', $(window).height() )
+        .animate({
+            top : 0,
+            opacity : 1
+        }, appChangeTime, function(){
+            // callback, triggered at the end of the animation
+            $(this)
+            .addClass('open-app')
+            .removeClass('trans-app')
+    	        .children('.current-screen')
+    	        .removeClass('trans-screen');
+        })
+        .children('.current-screen')
+        .addClass('trans-screen');
+    } else {
+        console.log('No app with that ID!');
+    }
 }
 
 function CloseCurrentApp(callback, args) {
@@ -191,7 +197,7 @@ function CloseCurrentApp(callback, args) {
 
     var $currentApp = $('.open-app');
 
-    if ($currentApp.exists()) {
+    if ($currentApp.exists() && $currentApp.hasClass('app')) {
         $currentApp
         .removeClass('open-app')
         .addClass('trans-app')
@@ -203,7 +209,8 @@ function CloseCurrentApp(callback, args) {
             .removeClass('trans-app')
             .children('.current-screen')
     		.removeClass('trans-screen');
-            callback(args);
+            callback(args); // called after app is fully open
+            $(document).trigger('appclosed',[$currentApp]); // trigger appclosed event
         })
         .children('.current-screen')
     	.addClass('trans-screen');
@@ -288,45 +295,28 @@ function ScreenBack() {
 }
 
 function ClearNotifications() {
-    c = $('#noti-canvas');
-    ct = c[0].getContext('2d');
-    ct.clearRect(0, 0, c.width(), c.height());
+    $('.noti-container').hide();
 }
 
 function Get1Noti(id) {
-    var $canvas = $('#noti-canvas');
-    var ctx = $canvas[0].getContext('2d');
-
     ClearNotifications();
-
-    //draw circle
-    ctx.beginPath();
-        ctx.arc.apply(ctx, appIDToLocation[id].concat([10,0,2*Math.PI]));
-        ctx.fillStyle = 'rgba(220,20,20,0.9)';
-        ctx.strokeStyle = 'rgba(150,20,20,0.9)';
-        ctx.stroke();
-        ctx.fill();
-    ctx.closePath();
-
-    //draw number
-    ctx.beginPath();
-        ctx.font = '15px Arial';
-        ctx.fillStyle = 'white';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText.apply(ctx,['1'].concat(appIDToLocation[id]));
-    ctx.closePath();
-
+    $('.'+id+'-noti').show();
 }
 
-function DynamicResize() {
-    w = $(window).width();
-    h = $(window).height();
-    $('#noti-canvas').attr('width',0.6*h).attr('height',h);
-}
 function DoNothing(x){
+}
+
+function Initialize() {
+
+    OpenApp(initialApp);
+
+    var h = $(window).height();
+    if (h > 550 && h < 700) {
+        $('#main-div').height(h).width(0.6*h);
+    } // resize window, within a limit
 }
 
 $.fn.exists = function () {
     return this.length > 0;
 }
+
